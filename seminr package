@@ -40,7 +40,10 @@ model1 <- constructs(
   composite("V2", multi_items("V2", 1:N)),
   composite("V3", multi_items("V3", 1:N)),
   composite("V4", multi_items("V4", 1:N)),
-  composite("V5", multi_items("V5", 1:N)),
+  composite("C4", multi_items("C4", 1:N)),
+  composite("C5", multi_items("C5", 1:N)),
+  composite("C6", multi_items("C6", 1:N)),
+  higher_composite("V5", c("C4","C5", "C6")),
   interaction_term(iv = "V1", moderator = "V4"))
 
 #structural model
