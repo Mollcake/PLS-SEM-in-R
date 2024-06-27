@@ -1,0 +1,46 @@
+#latent class cluster analysis
+#install
+library(poLCA)
+
+#define LCA model
+#method 1: 使用循环句法筛选出最优模型
+model_lca <- cbind(C1, C2) ~ 1
+max_II <- -100000
+min_bic <- 100000
+for (i in 2:10) {
+  M1 <- poLCA(model_lca, data = data, nclass = i, maxiter = 3000,
+              tol = 1e-5, na.rm = FALSE,
+              nrep = 10, verbose = TRUE, calc.se = TRUE)
+  if(M1$bic < min_bic){
+    min_bic <- M1$bic
+    LCA_best_model <-M1
+  }
+}
+LCA_best_model <- poLCA(cbind(C1,C2) ~ 1, data = data, nclass = 2, maxiter = 1000,
+                        graphs = TRUE, tol = 1e-10, na.rm = FALSE, nrep = 10)
+
+#method 2: 自己规定class size
+M1 <- poLCA(model_lca, data = data, nclass = 2, graphs = TRUE, na.rm = TRUE)
+
+#数据集整合
+newdata <- cbind(LCA_best_model$predclass, data)
+colnames(newdata)[1] <- "class"
+head(newdata)
+library(openxlsx)
+write.xlsx(newdata, file = "C:/Users/user/Desktop/LCADATA4.xlsx", quote = F, rownames = F)
+
+#import LCA data
+lcadata <- read.csv("C:/Users/user/Desktop/LCADATA4.csv")
+
+# Define two subgroups on the data based on any boolean criteria
+sum(lcadata$class == 1)
+sum(lcadata$class== 2)
+
+# Process PLS-MGA on estimated model and given criteria
+estmga <- estimate_pls_mga(est, lcadata$class == 2)
+estmga
+estmga$group1_beta
+estmga$group2_beta
+estmga$pls_mga_p
+
+summary(estmga)
