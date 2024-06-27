@@ -1,0 +1,132 @@
+#package loading
+library(seminr)
+library(semPlot)
+#for normality test
+library("ggpubr")
+
+#import data
+data <- read.csv("......")
+
+#data standardization (if it is necessary)
+sddata <- scale(data, center = T, scale = T)
+head(sddata)
+write.csv(sddata,file = "C:/Users/user/Desktop/旧论文版本/data/SDRESULT.csv",quote = F, row.names = F)
+
+
+#normality test
+set.seed(1234)
+dplyr::sample_n(data, 10)
+ggdensity(data$SCS5, 
+          main = "Density plot of tooth length",
+          xlab = "Tooth length")
+data_values <- data$...
+result_sw <- shapiro.test(data_values)
+cat("Shapiro-Wilk test:", result_sw$statistic, "\n")
+cat("p-value:", result_sw$p.value, "\n")
+significance_level = 0.05
+if (
+  result_sw$p.value < significance_level) {
+  cat("The data is not normally distributed.\n")
+} else {
+  cat("The data is normally distributed.\n")
+}
+
+#measurement model
+model1 <- constructs(
+  composite("C1", multi_items("C1", 1:N)),
+  composite("C2", multi_items("C2", 1:N)),
+  composite("C3", multi_items("C3", 1:N)),
+  higher_composite("V1", c("C1","C2", "C3")),
+  composite("V2", multi_items("V2", 1:N)),
+  composite("V3", multi_items("V3", 1:N)),
+  composite("V4", multi_items("V4", 1:N)),
+  composite("V5", multi_items("V5", 1:N)),
+  interaction_term(iv = "V1", moderator = "V4"))
+
+#structural model
+model2 <- relationships(paths(from = c("V1", "V4", "V1*V4"), to = c("V2", "V3")),
+                           paths(from = c("V1", "V2", "V3"), to = "V5"))
+est <- estimate_pls(data = data,
+                    measurement_model = model1,
+                    structural_model = model2,
+                    inner_weights = path_weighting)
+
+plot(est)
+
+#estimate
+summary_mod <- summary(est)
+summary_mod$loadings
+summary_mod$validity
+summary_mod$reliability
+
+#structural model
+summary_mod$paths
+summary_mod$total_effects
+summary_mod$total_indirect_effects
+summary_mod$vif_antecedents
+summary_mod$fSquare
+summary_mod$it_criteria
+summary_mod$composite_scores
+
+#strcutural paths
+print(summary_mod$paths,digits = 3)
+print(summary_mod$fSquare, digits = 3)
+
+#total effect and indirect effect
+print(summary_mod$total_effects, digits = 3)
+print(summary_mod$total_indirect_effects, digits = 3)
+
+#AID, BIC
+print(summary_mod$it_criteria, digits = 3)
+print(summary_mod$fSquare, digits = 3)
+
+#construct scores
+print(summary_mod$composite_scores, digits = 3)
+
+#bootstrap the model
+boot_mod <- bootstrap_model(est, nboot = 5000)
+summary_boot_mod <- summary(boot_mod)
+summary_boot_mod$bootstrapped_paths
+summary_boot_mod$bootstrapped_loadings
+summary_boot_mod$bootstrapped_weights
+summary_boot_mod$bootstrapped_HTMT
+summary_boot_mod$bootstrapped_total_paths
+
+plot(boot_mod)
+
+#mediation effect analysis
+#direct effect
+summary_boot_mod$bootstrapped_paths
+#indirect effect
+specific_effect_significance(boot_mod, 
+                             from = "V1", 
+                             through = "V2", 
+                             to = "V5",
+                             alpha = 0.05)
+specific_effect_significance(boot_mod,
+                             from = "V1",
+                             through = "V3",
+                             to = "V5")
+
+#计算pvalue
+#法一
+tvalues <- summary_boot_mod$bootstrapped_paths[, "T Stat."]
+plot(hist(tvalues))
+df = nrow(data)
+pvalues <- round(2*pt(tvalues, df, lower.tail = FALSE), 3)
+data.frame(tvalues, pvalues)
+#法二
+pvalue <- stats::pt(abs(tvalues), nrow(dat) - 1, lower.tail = FALSE)
+data.frame(tvalues, pvalues)
+
+#slop analysis
+slope1 <- slope_analysis(est,
+                         dv = "",V2
+                         moderator = "V4",
+                         iv = "V5",
+                         leg_place = "bottomleft")
+slope2 <- slope_analysis(est,
+                         dv = "V3",
+                         moderator = "V4",
+                         iv = "V5",
+                         leg_place = "bottomright")
