@@ -1,0 +1,32 @@
+install.packages("dplyr")
+library(dplyr)
+
+#import data
+data <- read.csv("...")
+
+# print dataset's structure
+str(data)
+# recode class into 2 classes
+data$class <- ifelse(data$class == 2,
+                     0,
+                     1)
+# set labels for class
+data$class <- factor(data$class,
+                     levels = c(0, 1),
+                     labels = c("group2", "group1"))
+levels(data$class)
+
+# save model
+#class-V1
+m1 <- glm(class ~ V1,
+          data = data,
+          family = "binomial")
+summary(m1)     
+
+# OR for V1
+exp(coef(m1)["V1"])
+
+coef(m1)
+exp(coef(m1))
+exp(confint(m1))
+cbind(coef(m1), odds_ratio = exp(coef(m1)), exp(confint(m1)))
